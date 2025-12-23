@@ -1,38 +1,441 @@
-﻿@using CafeManagementSystem.Data
+﻿
+@* @using CafeManagementSystem.Data
 @inject ApplicationDbContext _context
 
-<h2>Dashboard</h2>
-<div class="row">
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<style>
+    body {
+        background-color: #f4f6f9;
+        font-family: 'Segoe UI', sans-serif;
+    }
+
+    .page-title {
+        font-size: 28px;
+        font-weight: bold;
+        margin-bottom: 25px;
+        color: #2c3e50;
+    }
+
+    /* ===== STAT CARDS ===== */
+    .stat-card {
+        background: white;
+        border-radius: 14px;
+        padding: 22px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+        height: 130px;
+        position: relative;
+    }
+
+        .stat-card h6 {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+
+        .stat-card h2 {
+            font-size: 34px;
+            font-weight: bold;
+            margin-top: 8px;
+        }
+
+    .stat-icon {
+        font-size: 42px;
+        position: absolute;
+        right: 18px;
+        bottom: 18px;
+        opacity: 0.2;
+    }
+
+    /* ===== SECTIONS ===== */
+    .section {
+        background: white;
+        border-radius: 14px;
+        padding: 22px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+        margin-bottom: 25px;
+    }
+
+    table th {
+        background: #ecf0f1;
+    }
+
+    table td, table th {
+        padding: 12px;
+    }
+
+    .badge-success {
+        background: #2ecc71;
+        padding: 6px 10px;
+        border-radius: 6px;
+        color: white;
+        font-size: 12px;
+    }
+</style>
+
+<h2 class="page-title">☕ Cafe Management Dashboard</h2>
+
+<!-- ===== TOP STATISTICS ===== -->
+<div class="row mb-4">
     <div class="col-md-3">
-        <div class="card text-white bg-primary mb-3">
-            <div class="card-header">Categories</div>
-            <div class="card-body">
-                <h5 class="card-title">@_context.Categories.Count()</h5>
-            </div>
+        <div class="stat-card">
+            <h6>Total Categories</h6>
+            <h2>@_context.Categories.Count()</h2>
+            <div class="stat-icon">📂</div>
         </div>
     </div>
+
     <div class="col-md-3">
-        <div class="card text-white bg-success mb-3">
-            <div class="card-header">Products</div>
-            <div class="card-body">
-                <h5 class="card-title">@_context.Products.Count()</h5>
-            </div>
+        <div class="stat-card">
+            <h6>Total Products</h6>
+            <h2>@_context.Products.Count()</h2>
+            <div class="stat-icon">🍔</div>
         </div>
     </div>
+
     <div class="col-md-3">
-        <div class="card text-white bg-warning mb-3">
-            <div class="card-header">Orders</div>
-            <div class="card-body">
-                <h5 class="card-title">@_context.Orders.Count()</h5>
-            </div>
+        <div class="stat-card">
+            <h6>Total Orders</h6>
+            <h2>@_context.Orders.Count()</h2>
+            <div class="stat-icon">🧾</div>
         </div>
     </div>
+
     <div class="col-md-3">
-        <div class="card text-white bg-danger mb-3">
-            <div class="card-header">Total Sales</div>
-            <div class="card-body">
-                <h5 class="card-title">@_context.Orders.Sum(o => o.TotalAmount).ToString("C")</h5>
-            </div>
+        <div class="stat-card">
+            <h6>Total Sales</h6>
+            <h2>@_context.Orders.Sum(o => o.TotalAmount).ToString("C")</h2>
+            <div class="stat-icon">💰</div>
         </div>
     </div>
 </div>
+
+<!-- ===== MIDDLE SECTION ===== -->
+<div class="row">
+    <!-- Recent Orders -->
+    <div class="col-md-8">
+        <div class="section">
+            <h5 class="mb-3">🧾 Recent Orders</h5>
+
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Total Amount</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var order in _context.Orders.OrderByDescending(o => o.OrderId).Take(6))
+                    {
+                        <tr>
+                            <td>#@order.OrderId</td>
+                            <td>@order.TotalAmount.ToString("C")</td>
+                            <td><span class="badge-success">Completed</span></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Quick Summary -->
+    <div class="col-md-4">
+        <div class="section">
+            <h5 class="mb-3">📊 System Summary</h5>
+            <p>✔ Active Products: <strong>@_context.Products.Count()</strong></p>
+            <p>✔ Orders Processed: <strong>@_context.Orders.Count()</strong></p>
+            <p>✔ Database Status: <strong>Connected</strong></p>
+            <p>✔ System Mode: <strong>Live</strong></p>
+        </div>
+    </div>
+</div>
+
+<!-- ===== BOTTOM SECTION ===== -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="section">
+            <h5 class="mb-3">📦 Product Overview</h5>
+
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Product Name</th>
+                        <th>Category</th>
+                    </tr>
+                </thead>
+                <tbody>
+                   
+
+                    @using Microsoft.EntityFrameworkCore
+
+                    @{
+                        var products = _context.Products
+                        .Include(p => p.Category) // load related category
+                        .Take(8)
+                        .ToList();
+                    }
+                
+                    @foreach (var p in _context.Products.Take(8))
+                    {
+                        <tr>
+                            <td>@p.ProductName</td>
+                            <td>@p.Category.CategoryName</td> 
+                        </tr>
+                    } 
+
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div> *@
+
+
+@using CafeManagementSystem.Data
+@inject ApplicationDbContext _context
+
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<style>
+    /* ===== BODY ===== */
+    body {
+        background: linear-gradient(to bottom, #f0f4f8, #e2e8f0);
+        font-family: 'Segoe UI', sans-serif;
+    }
+
+    .page-title {
+        font-size: 32px;
+        font-weight: 700;
+        margin-bottom: 30px;
+        color: #34495e;
+        text-align: center;
+        letter-spacing: 1px;
+    }
+
+    /* ===== STAT CARDS ===== */
+    .stat-card {
+        border-radius: 16px;
+        padding: 25px 20px;
+        color: white;
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.3s, box-shadow 0.3s;
+        cursor: pointer;
+    }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 25px rgba(0,0,0,0.2);
+        }
+
+        .stat-card h6 {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.9;
+        }
+
+        .stat-card h2 {
+            font-size: 36px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+    .stat-icon {
+        font-size: 50px;
+        position: absolute;
+        right: 20px;
+        bottom: 20px;
+        opacity: 0.2;
+    }
+
+    .bg-categories {
+        background: #3498db;
+    }
+
+    .bg-products {
+        background: #1abc9c;
+    }
+
+    .bg-orders {
+        background: #f39c12;
+    }
+
+    .bg-sales {
+        background: #e74c3c;
+    }
+
+    /* ===== SECTIONS ===== */
+    .section {
+        background: white;
+        border-radius: 16px;
+        padding: 25px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+    }
+
+        .section h5 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+
+    table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 10px;
+    }
+
+        table th {
+            background: #ecf0f1;
+            color: #34495e;
+            font-weight: 600;
+            border: none;
+            padding: 12px 15px;
+            border-radius: 10px 10px 0 0;
+        }
+
+        table td {
+            background: #ffffff;
+            padding: 12px 15px;
+            border: none;
+            border-radius: 0 0 10px 10px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        }
+
+    .badge-success {
+        background: #2ecc71;
+        padding: 6px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        color: white;
+    }
+
+    /* ===== QUICK SUMMARY ===== */
+    .summary p {
+        font-size: 15px;
+        margin-bottom: 12px;
+        color: #2c3e50;
+    }
+
+    .summary strong {
+        color: #1abc9c;
+    }
+
+</style>
+
+<h2 class="page-title">☕ Cafe Management Dashboard</h2>
+
+<!-- ===== TOP STATISTICS ===== -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="stat-card bg-categories">
+            <h6>Total Categories</h6>
+            <h2>@_context.Categories.Count()</h2>
+            <div class="stat-icon">📂</div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="stat-card bg-products">
+            <h6>Total Products</h6>
+            <h2>@_context.Products.Count()</h2>
+            <div class="stat-icon">🍔</div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="stat-card bg-orders">
+            <h6>Total Orders</h6>
+            <h2>@_context.Orders.Count()</h2>
+            <div class="stat-icon">🧾</div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="stat-card bg-sales">
+            <h6>Total Sales</h6>
+            <h2>@_context.Orders.Sum(o => o.TotalAmount).ToString("C")</h2>
+            <div class="stat-icon">💰</div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== MIDDLE SECTION ===== -->
+<div class="row">
+    <!-- Recent Orders -->
+    <div class="col-md-8">
+        <div class="section">
+            <h5>🧾 Recent Orders</h5>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Total Amount</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var order in _context.Orders.OrderByDescending(o => o.OrderId).Take(6))
+                    {
+                        <tr>
+                            <td>#@order.OrderId</td>
+                            <td>@order.TotalAmount.ToString("C")</td>
+                            <td><span class="badge-success">Completed</span></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Quick Summary -->
+    <div class="col-md-4">
+        <div class="section summary">
+            <h5>📊 System Summary</h5>
+            <p>✔ Active Products: <strong>@_context.Products.Count()</strong></p>
+            <p>✔ Orders Processed: <strong>@_context.Orders.Count()</strong></p>
+            <p>✔ Database Status: <strong>Connected</strong></p>
+            <p>✔ System Mode: <strong>Live</strong></p>
+        </div>
+    </div>
+</div>
+
+<!-- ===== BOTTOM SECTION ===== -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="section">
+            <h5>📦 Product Overview</h5>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Product Name</th>
+                        <th>Category</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @using Microsoft.EntityFrameworkCore
+                    @{
+                        var ProductName = _context.Products.Include(p => p.Category).Take(8).ToList();
+                    }
+
+                    @foreach (var p in ProductName)
+                    {
+                        <tr>
+                            <td>@p.ProductName</td>
+                            <td>@p.Category.CategoryName</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+

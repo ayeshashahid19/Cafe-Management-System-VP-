@@ -108,7 +108,7 @@ namespace CafeManagementSystem.Controllers
             return View(order);
         }
 
-        // ===================== ORDER DETAILS =====================
+         //===================== ORDER DETAILS =====================
         public IActionResult Details(int id)
         {
             var order = _context.Orders
@@ -121,5 +121,9 @@ namespace CafeManagementSystem.Controllers
 
             return View(order);
         }
+
     }
 }
+
+
+

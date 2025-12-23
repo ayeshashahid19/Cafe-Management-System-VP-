@@ -1,4 +1,4 @@
-﻿@model CafeManagementSystem.Models.Order
+﻿@* @model CafeManagementSystem.Models.Order
 @{
     var items = ViewBag.OrderItems;
 }
@@ -27,6 +27,45 @@
                 <td>@i.Price.ToString("C")</td>
                 <td>@i.Total.ToString("C")</td>
             </tr>
+        }
+    </tbody>
+</table>
+
+<a asp-action="Index" class="btn btn-secondary">Back</a> *@
+
+
+
+@model CafeManagementSystem.Models.Order
+
+<h2>Order Details</h2>
+
+<p><strong>Order ID:</strong> @Model.OrderId</p>
+<p><strong>Date:</strong> @Model.OrderDate.ToString("dd/MM/yyyy HH:mm")</p>
+<p><strong>Total Amount:</strong> @Model.TotalAmount.ToString("C")</p>
+
+<h4>Items:</h4>
+
+<table class="table table-bordered">
+    <thead class="table-dark">
+        <tr>
+            <th>Product</th>
+            <th>Quantity</th>
+            <th>Price</th>
+            <th>Total</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var i in Model.OrderItems)
+        {
+            <tr>
+                <td>@i.Product.ProductName</td>
+                <td>@i.Quantity</td>
+                <td>@i.Price.ToString("C")</td>
+                <td>@(i.Price* i.Quantity)</td>
+            </tr>
+
+            
+
         }
     </tbody>
 </table>
